@@ -11,24 +11,22 @@ abstract class CarController {
 }
 
 class CarControllerImpl extends CarController {
-  CarControllerImpl(this.controller);
-  final StreamController<Map<String, bool>> controller;
-  late StreamSubscription<BluetoothDiscoveryResult> _streamSubscription;
-  List<Direction> directionState = [];
-
+  CarControllerImpl(this._controller);
+  final StreamController<Map<String, bool>> _controller;
+  final List<Direction> _directionState = [];
   BluetoothConnection? _connection;
-  List<BluetoothDiscoveryResult> results = [];
+  List<BluetoothDiscoveryResult> _results = [];
+
   @override
   Future startDiscover(Function(BluetoothDiscoveryResult)? onDiscover) async {
-    _streamSubscription =
-        FlutterBluetoothSerial.instance.startDiscovery().listen((result) {
-      final duplicate = results.indexWhere(
+    FlutterBluetoothSerial.instance.startDiscovery().listen((result) {
+      final duplicate = _results.indexWhere(
           (element) => element.device.address == result.device.address);
       if (duplicate >= 0) {
-        results[duplicate] = result;
+        _results[duplicate] = result;
       } else {
         log(result.device.address);
-        results = [...results, result];
+        _results = [..._results, result];
         onDiscover?.call(result);
       }
     });
@@ -46,14 +44,14 @@ class CarControllerImpl extends CarController {
     return true;
   }
 
-  Action? _currentState(String state, bool isAdd) {
+  Action? _currentDirection(String state, bool isAdd) {
     Direction direction = Direction.values.byName(state);
-    return isAdd ? _addState(direction) : _removeSate(direction);
+    return isAdd ? _addDirection(direction) : _removeDirection(direction);
   }
 
-  Action _atomicState() {
+  Action _atomicDirection() {
     var action = Action.stop;
-    var state = directionState.single;
+    var state = _directionState.single;
     switch (state) {
       case Direction.forward:
         action = Action.goUp;
@@ -71,59 +69,59 @@ class CarControllerImpl extends CarController {
     return action;
   }
 
-  Action? _combineState() {
-    if (directionState.contains(Direction.forward) &&
-        (directionState.contains(Direction.backward))) {
+  Action? _combineDirection() {
+    if (_directionState.contains(Direction.forward) &&
+        (_directionState.contains(Direction.backward))) {
       return null;
-    } else if (directionState.contains(Direction.left) &&
-        (directionState.contains(Direction.right))) {
+    } else if (_directionState.contains(Direction.left) &&
+        (_directionState.contains(Direction.right))) {
       return null;
     }
-    if (directionState.contains(Direction.forward)) {
-      return (directionState.contains(Direction.left) == true)
+    if (_directionState.contains(Direction.forward)) {
+      return (_directionState.contains(Direction.left) == true)
           ? Action.goUpLeft
           : Action.goUpRight;
-    } else if (directionState.contains(Direction.backward)) {
-      return (directionState.contains(Direction.left) == true)
+    } else if (_directionState.contains(Direction.backward)) {
+      return (_directionState.contains(Direction.left) == true)
           ? Action.goDownRight
           : Action.goDownLeft;
     }
     return null;
   }
 
-  Action? _addState(Direction state) {
-    var carState = CarState.values[directionState.length];
+  Action? _addDirection(Direction state) {
+    var carState = CarState.values[_directionState.length];
     switch (carState) {
-      case CarState.Empty:
-        directionState.add(state);
-        return _atomicState();
-      case CarState.Atomic:
-        directionState.add(state);
-        return _combineState();
-      case CarState.Combine:
+      case CarState.empty:
+        _directionState.add(state);
+        return _atomicDirection();
+      case CarState.atomic:
+        _directionState.add(state);
+        return _combineDirection();
+      case CarState.combine:
         return null;
     }
   }
 
-  Action? _removeSate(Direction state) {
-    var carState = CarState.values[directionState.length];
+  Action? _removeDirection(Direction state) {
+    var carState = CarState.values[_directionState.length];
     switch (carState) {
-      case CarState.Empty:
+      case CarState.empty:
         return null;
-      case CarState.Atomic:
-        directionState.remove(state);
+      case CarState.atomic:
+        _directionState.remove(state);
         return Action.stop;
-      case CarState.Combine:
-        directionState.remove(state);
-        return _atomicState();
+      case CarState.combine:
+        _directionState.remove(state);
+        return _atomicDirection();
       default:
         return null;
     }
   }
 
   _listenToDirection() {
-    controller.stream.listen((event) {
-      Action? action = _currentState(event.keys.first, event.values.first);
+    _controller.stream.listen((event) {
+      Action? action = _currentDirection(event.keys.first, event.values.first);
       switch (action) {
         case Action.goUp:
           _up();
@@ -147,7 +145,7 @@ class CarControllerImpl extends CarController {
           _upRight();
           break;
         case Action.goDownLeft:
-          _downLeft(); // TODO: Handle this case.
+          _downLeft();
           break;
         case Action.goDownRight:
           _downRight();
@@ -205,7 +203,7 @@ class CarControllerImpl extends CarController {
   }
 }
 
-enum CarState { Empty, Atomic, Combine }
+enum CarState { empty, atomic, combine }
 
 enum Direction { forward, backward, left, right }
 

@@ -40,8 +40,6 @@ dependencies:
       ref: master
   provider: ^6.0.5
   get_it: ^7.1.3
-
-  permission_handler: ^10.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
