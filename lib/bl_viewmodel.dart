@@ -1,28 +1,45 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:hc05/car_controller.dart';
+import 'package:hc05/controller/car_service.dart';
+
+import 'controller/monitor_controller.dart';
+import 'controller/moving_controller.dart';
 
 class BluetoothViewmodel extends ChangeNotifier {
-  BluetoothViewmodel();
+  BluetoothViewmodel(this.service);
   List<BluetoothDiscoveryResult> results = [];
-  final StreamController<Map<String, bool>> _directions = StreamController();
-  late final CarController _controller = CarControllerImpl(_directions);
-
+  final CarService service;
   go(Direction direction) {
-    _directions.add({direction.name: true});
+    service.go(direction);
   }
 
   stop(Direction direction) {
-    _directions.add({direction.name: false});
+    service.stop(direction);
   }
 
   connectDevice(String address) {
-    _controller.connectDevice(address);
+    service.connectDevice(address);
+  }
+
+  setSpeed(Speed speed) {
+    service.setSpeed(speed);
+  }
+
+  frontLight(bool onPress) {
+    service.frontLight(onPress);
+  }
+
+  horn(bool onPress) {
+    service.horn(onPress);
+  }
+
+  backLight(bool onPress) {
+    service.backLight(onPress);
   }
 
   startDiscover() {
-    _controller.startDiscover((result) {
+    service.startDiscover((result) {
       results = [...results, result];
       notifyListeners();
     });

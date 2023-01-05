@@ -1,47 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
-abstract class CarController {
-  Future startDiscover(Function(BluetoothDiscoveryResult result)? onDiscover);
-  Future<bool?> connectDevice(String address);
-}
-
-class CarControllerImpl extends CarController {
-  CarControllerImpl(this._controller);
+class MovingController {
+  MovingController(this._controller, this._connection);
   final StreamController<Map<String, bool>> _controller;
   final List<Direction> _directionState = [];
-  BluetoothConnection? _connection;
-  List<BluetoothDiscoveryResult> _results = [];
+  final BluetoothConnection? _connection;
 
-  @override
-  Future startDiscover(Function(BluetoothDiscoveryResult)? onDiscover) async {
-    FlutterBluetoothSerial.instance.startDiscovery().listen((result) {
-      final duplicate = _results.indexWhere(
-          (element) => element.device.address == result.device.address);
-      if (duplicate >= 0) {
-        _results[duplicate] = result;
-      } else {
-        log(result.device.address);
-        _results = [..._results, result];
-        onDiscover?.call(result);
-      }
-    });
-  }
-
-  @override
-  Future<bool?> connectDevice(String address) async {
-    BluetoothConnection.toAddress(address).then((connection) {
-      _connection = connection;
-    }).whenComplete(() {
-      _stop();
-      _listenToDirection();
-    });
-
-    return true;
+  getController() {
+    _stop();
+    _onDirectionChanged();
   }
 
   Action? _currentDirection(String state, bool isAdd) {
@@ -83,8 +54,8 @@ class CarControllerImpl extends CarController {
           : Action.goUpRight;
     } else if (_directionState.contains(Direction.backward)) {
       return (_directionState.contains(Direction.left) == true)
-          ? Action.goDownRight
-          : Action.goDownLeft;
+          ? Action.goDownLeft
+          : Action.goDownRight;
     }
     return null;
   }
@@ -119,7 +90,7 @@ class CarControllerImpl extends CarController {
     }
   }
 
-  _listenToDirection() {
+  _onDirectionChanged() {
     _controller.stream.listen((event) {
       Action? action = _currentDirection(event.keys.first, event.values.first);
       switch (action) {
@@ -183,12 +154,12 @@ class CarControllerImpl extends CarController {
   }
 
   _downLeft() async {
-    _connection?.output.add(Uint8List.fromList(utf8.encode('J\r\n')));
+    _connection?.output.add(Uint8List.fromList(utf8.encode('H\r\n')));
     await _connection?.output.allSent;
   }
 
   _downRight() async {
-    _connection?.output.add(Uint8List.fromList(utf8.encode('H\r\n')));
+    _connection?.output.add(Uint8List.fromList(utf8.encode('J\r\n')));
     await _connection?.output.allSent;
   }
 
