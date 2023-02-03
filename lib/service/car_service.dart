@@ -1,18 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hc05/controller/monitor_controller.dart';
 import 'package:hc05/controller/moving_controller.dart';
 
-import 'connection_controller.dart';
+import '../controller/connection_controller.dart';
+import '../controller/gps_controller.dart';
 
 abstract class CarService {
-  connectDevice(String address);
+  Stream<LatLng> get coordinateData;
+  Future<void> connectDevice(String address);
   disconnectDevice();
   startDiscover(Function(BluetoothDiscoveryResult result)? onDiscover);
   go(Direction direction);
   stop(Direction direction);
   horn(bool onPressed);
+  alert(bool onPressed);
   frontLight(bool onPressed);
   backLight(bool onPressed);
   setSpeed(Speed speed);
@@ -21,19 +25,25 @@ abstract class CarService {
 class CarServiceImpl extends CarService {
   final StreamController<Map<String, bool>> _movingStream = StreamController();
   final StreamController<MonitorAction> _monitorStream = StreamController();
+  final ConnectionController _connectController = ConnectionController();
+
+  @override
+  Stream<LatLng> get coordinateData => _gpsController.coordinateStream;
 
   late final MovingController _movingController;
   late final MonitorController _monitorController;
-  late final ConnectionController _connectController = ConnectionController();
+  late final GpsController _gpsController;
   @override
-  connectDevice(String address) {
-    _connectController.connectDevice(address, onComplete: () {
+  Future<void> connectDevice(String address) async {
+    await _connectController.connectDevice(address, onComplete: () {
       _movingController =
           MovingController(_movingStream, _connectController.connection)
             ..getController();
       _monitorController =
           MonitorController(_monitorStream, _connectController.connection)
             ..getController();
+      _gpsController = GpsController(_connectController.connection)
+        ..getController();
     });
   }
 
@@ -81,5 +91,12 @@ class CarServiceImpl extends CarService {
   @override
   setSpeed(Speed speed) {
     _monitorController.setSpeed(speed);
+  }
+
+  @override
+  alert(bool onPressed) {
+    onPressed
+        ? _monitorStream.add(MonitorAction.alertOn)
+        : _monitorStream.add(MonitorAction.alertOff);
   }
 }

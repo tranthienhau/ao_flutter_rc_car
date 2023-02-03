@@ -36,12 +36,19 @@ class MonitorController {
         case MonitorAction.backLightsOff:
           _backLightsOff();
           break;
+        case MonitorAction.alertOn:
+          _alertOn();
+          break;
+        case MonitorAction.alertOff:
+          _alertOff();
+          break;
       }
     });
   }
 
-  setSpeed(Speed speed) {
+  setSpeed(Speed speed) async {
     _connection?.output.add(speed.transformSpeed());
+    await _connection?.output.allSent;
   }
 
   _hornOn() async {
@@ -51,6 +58,16 @@ class MonitorController {
 
   _hornOff() async {
     _connection?.output.add(Uint8List.fromList(utf8.encode('v\r\n')));
+    await _connection?.output.allSent;
+  }
+
+  _alertOn() async {
+    _connection?.output.add(Uint8List.fromList(utf8.encode('X\r\n')));
+    await _connection?.output.allSent;
+  }
+
+  _alertOff() async {
+    _connection?.output.add(Uint8List.fromList(utf8.encode('x\r\n')));
     await _connection?.output.allSent;
   }
 
@@ -82,6 +99,8 @@ enum MonitorAction {
   frontLightsOff,
   backLightsOn,
   backLightsOff,
+  alertOn,
+  alertOff,
 }
 
 enum Speed {

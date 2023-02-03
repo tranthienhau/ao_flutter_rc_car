@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:hc05/bl_viewmodel.dart';
+import 'package:hc05/core/app_router.dart';
+import 'package:hc05/service/navigation_service.dart';
 import 'package:hc05/setup.dart';
 import 'package:provider/provider.dart';
 
@@ -30,6 +32,9 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
+        onGenerateRoute: AppRoute.generateRoute,
+        initialRoute: '/',
+        navigatorKey: globalNavigationKey,
         home: const MyHomePage(),
       ),
     );
@@ -71,17 +76,23 @@ class MyHomePage extends StatelessWidget {
               },
               child: const Icon(Icons.scanner, size: 24, color: Colors.white)),
           const SizedBox(width: 20),
-          PopupMenuButton<String>(
-            onSelected: (value) => handleClick(context, value),
-            itemBuilder: (BuildContext context) {
-              return Speed.values.map((Speed speed) {
-                return PopupMenuItem<String>(
-                  value: speed.name,
-                  child: Text(speed.name),
-                );
-              }).toList();
-            },
-          ),
+          InkWell(
+              onTap: () =>
+                  locator.get<NavigationService>().pushNamed(AppRoute.pageMap),
+              child: const Icon(Icons.change_circle,
+                  size: 24, color: Colors.white)),
+
+          // PopupMenuButton<String>(
+          //   onSelected: (value) => handleClick(context, value),
+          //   itemBuilder: (BuildContext context) {
+          //     return Speed.values.map((Speed speed) {
+          //       return PopupMenuItem<String>(
+          //         value: speed.name,
+          //         child: Text(speed.name),
+          //       );
+          //     }).toList();
+          //   },
+          // ),
         ],
       ),
       body: Center(
@@ -127,7 +138,7 @@ class MyHomePage extends StatelessWidget {
             ),
             Expanded(
               child: _buildListDevice(),
-            )
+            ),
           ],
         ),
       ),
