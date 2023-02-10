@@ -16,8 +16,14 @@ class BluetoothDeviceListEntry extends ListTile {
           enabled: enabled,
           leading: const Icon(
               Icons.devices), // @TODO . !BluetoothClass! class aware icon
-          title: Text(device.name ?? "Unknown"),
-          subtitle: Text(device.address.toString()),
+          title: Text(
+            device.name ?? "Unknown",
+            style: const TextStyle(color: Colors.white),
+          ),
+          subtitle: Text(
+            device.address.toString(),
+            style: const TextStyle(color: Colors.white),
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -29,7 +35,9 @@ class BluetoothDeviceListEntry extends ListTile {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
-                            Text(rssi.toString()),
+                            Text(
+                              rssi.toString(),
+                            ),
                             const Text('dBm'),
                           ],
                         ),

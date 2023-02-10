@@ -4,9 +4,13 @@ import 'dart:typed_data';
 
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
+import '../util/enum.dart';
+
 class MovingController {
-  MovingController(this._controller, this._connection);
+  MovingController(
+      this._controller, this._connection, this._carDirectionController);
   final StreamController<Map<String, bool>> _controller;
+  final StreamController<Action> _carDirectionController;
   final List<Direction> _directionState = [];
   final BluetoothConnection? _connection;
 
@@ -93,6 +97,7 @@ class MovingController {
   _onDirectionChanged() {
     _controller.stream.listen((event) {
       Action? action = _currentDirection(event.keys.first, event.values.first);
+      _carDirectionController.add(action ?? Action.stop);
       switch (action) {
         case Action.goUp:
           _up();
@@ -172,20 +177,4 @@ class MovingController {
     _connection?.output.add(Uint8List.fromList(utf8.encode('R\r\n')));
     await _connection?.output.allSent;
   }
-}
-
-enum CarState { empty, atomic, combine }
-
-enum Direction { forward, backward, left, right }
-
-enum Action {
-  goUp,
-  goDown,
-  goLeft,
-  goRight,
-  goUpLeft,
-  goUpRight,
-  goDownLeft,
-  goDownRight,
-  stop
 }

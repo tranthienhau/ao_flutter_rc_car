@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -17,7 +16,6 @@ class GpsController {
   _onGpsDataReceive() {
     _connection?.input?.listen((data) {
       var decodeData = ascii.decode(data);
-      DataReg.latlng.regex.allMatches(decodeData);
       if (decodeData.contains(DataReg.latlng.regex) == true) {
         processCoordinateData(decodeData);
       }
@@ -25,7 +23,8 @@ class GpsController {
   }
 
   void processCoordinateData(String decodeData) {
-    var rawCoordinate = DataReg.latlng.regex.stringMatch(decodeData);
+    var rawCoordinate =
+        DataReg.latlng.regex.stringMatch(decodeData)?.replaceAll(';', '');
     if (rawCoordinate != null) {
       var latitude = double.parse(rawCoordinate.split(',').first);
       var longitude = double.parse(rawCoordinate.split(',').last);
@@ -38,8 +37,8 @@ class DataReg {
   const DataReg._internal(this.regex);
   final RegExp regex;
   static const String _doubleReg = r"[+-]?\d*\.?\d+";
-  static DataReg invalid = DataReg._internal(RegExp(r"(INVALID;)+"));
-  static DataReg none = DataReg._internal(RegExp(r"(NONE;)+"));
+  static DataReg invalid = DataReg._internal(RegExp(r"(INVALID;)+?"));
+  static DataReg none = DataReg._internal(RegExp(r"(NONE;)+?"));
   static DataReg latlng =
-      DataReg._internal(RegExp("($_doubleReg,$_doubleReg;)+"));
+      DataReg._internal(RegExp("($_doubleReg,$_doubleReg;)+?"));
 }

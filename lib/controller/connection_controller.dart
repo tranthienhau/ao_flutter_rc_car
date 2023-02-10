@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
@@ -20,19 +21,26 @@ class ConnectionController {
     });
   }
 
-  Future<bool?> connectDevice(String address, {Function()? onComplete}) async {
+  Future<bool?> connectDevice(
+    String address, {
+    StreamController<bool>? connectionController,
+    Function()? onComplete,
+  }) async {
     await BluetoothConnection.toAddress(address).then((mConnection) {
       connection = mConnection;
+      connectionController?.add(true);
       onComplete?.call();
-      getDeviceStatus();
+      getDeviceStatus(connectionController);
     });
 
     return true;
   }
 
-  Future getDeviceStatus() async {
-    bl.onStateChanged().listen((state) {
-      log("${state.isEnabled}");
+  Future getDeviceStatus(
+    StreamController<bool>? connectionController,
+  ) async {
+    FlutterBluetoothSerial.instance.onStateChanged().listen((state) {
+      connectionController?.add(state.isEnabled);
     });
   }
 }
