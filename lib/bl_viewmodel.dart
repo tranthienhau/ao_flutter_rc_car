@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hc05/service/car_service.dart';
+import 'package:hc05/util/enum.dart' as en;
 
 import 'controller/monitor_controller.dart';
-import 'controller/moving_controller.dart';
 
 class BluetoothViewmodel extends ChangeNotifier {
   BluetoothViewmodel(this.service);
   final CarService service;
+  Stream<en.Action> get carDirectionStream => service.carDirectionStream;
+  Stream<bool> get deviceConnected => service.deviceConnected;
+
   List<BluetoothDiscoveryResult> results = [];
   // List<LatLng> _latlngs = const [
   //   LatLng(-35.016, 143.321),
@@ -20,11 +23,11 @@ class BluetoothViewmodel extends ChangeNotifier {
   // ];
   List<LatLng> _latlngs = [];
   Set<Polyline> polylines = {};
-  go(Direction direction) {
+  go(en.Direction direction) {
     service.go(direction);
   }
 
-  stop(Direction direction) {
+  stop(en.Direction direction) {
     service.stop(direction);
   }
 

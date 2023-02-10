@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hc05/page/map.dart';
+import 'package:hc05/page/map/map.dart';
 
-import '../main.dart';
+import '../page/home/home_page.dart';
 
 class AppRoute {
   static const pageMap = "/map";
@@ -15,7 +15,7 @@ class AppRoute {
         );
       default:
         return MaterialPageRoute(
-          builder: (_) => const MyHomePage(),
+          builder: (_) => const HomePage(),
           settings: settings,
         );
     }
